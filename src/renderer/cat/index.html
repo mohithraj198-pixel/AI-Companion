@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Companion</title>
+  <link rel="stylesheet" href="./cat.css" />
+</head>
+<body>
+  <div id="cat-container" class="cat-wrapper idle">
+    <!-- Speech Bubble matching screenshot -->
+    <div id="speech-bubble" class="speech-bubble">
+      <div class="bubble-header">
+        <div class="header-left">
+          <span id="bubble-title" class="bubble-title">Companion Status</span>
+          <span id="mistake-pill" class="mistake-pill hidden">Mistake Detected</span>
+        </div>
+        <div class="bubble-actions">
+          <button id="mute-quick-btn" title="Toggle voice speech" class="icon-btn action-btn">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </svg>
+          </button>
+          <button id="dismiss-btn" title="Dismiss message" class="icon-btn action-btn close-btn">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div id="bubble-content" class="bubble-content">
+        Observing screen changes...
+      </div>
+      <div class="bubble-tail"></div>
+    </div>
+
+    <!-- Floating Cat Character matching screenshot -->
+    <div id="cat-body" class="cat-body" title="Drag to move • Double-click for settings">
+      <!-- Ambient Cyan Aura -->
+      <div class="cat-glow-aura"></div>
+
+      <!-- Quick Action Dock on hover -->
+      <div class="quick-dock">
+        <button id="toggle-monitor-btn" class="dock-btn" title="Pause / Resume Monitoring (Ctrl+Alt+M)">⏸</button>
+        <button id="open-settings-btn" class="dock-btn" title="Settings & Privacy (Ctrl+Alt+S)">⚙</button>
+      </div>
+
+      <!-- Pointing Laser Pointer Beam (Appears when pointing out mistake) -->
+      <div id="pointing-beam" class="pointing-beam hidden">
+        <div class="beam-line"></div>
+        <div class="beam-target">
+          <span class="target-crosshair">🎯</span>
+          <span class="target-label">Mistake Found</span>
+        </div>
+      </div>
+
+      <!-- SVG Animated Cat -->
+      <svg viewBox="0 0 140 140" class="cat-svg" id="cat-svg">
+        <defs>
+          <!-- Cat body gradient -->
+          <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#2a334d" />
+            <stop offset="100%" stop-color="#182033" />
+          </linearGradient>
+
+          <!-- Head gradient -->
+          <linearGradient id="headGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#2d3752" />
+            <stop offset="100%" stop-color="#1a2236" />
+          </linearGradient>
+
+          <!-- Hot pink ear gradient matching screenshot -->
+          <linearGradient id="pinkEarGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#f43f5e" />
+            <stop offset="100%" stop-color="#ec4899" />
+          </linearGradient>
+
+          <!-- Cyan eye gradient matching screenshot -->
+          <radialGradient id="eyeCyanGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#7dd3fc" />
+            <stop offset="55%" stop-color="#0284c7" />
+            <stop offset="100%" stop-color="#0369a1" />
+          </radialGradient>
+
+          <!-- Glowing Cyan Collar Bell/Gem -->
+          <radialGradient id="bellGrad" cx="40%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="40%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#0284c7" />
+          </radialGradient>
+
+          <!-- Cyan Glow filter -->
+          <filter id="cyanGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3.5" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+
+        <!-- Tail curling on the left with glowing cyan outline -->
+        <g id="cat-tail-group" class="cat-tail-group">
+          <!-- Outer cyan glow outline -->
+          <path id="cat-tail-glow" class="cat-tail-glow"
+            d="M 62 108 C 42 106, 26 95, 26 78 C 26 67, 34 60, 42 66 C 44 68, 41 74, 38 78 C 34 85, 42 98, 62 103"
+            fill="#182033" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+            filter="url(#cyanGlow)" />
+          <!-- Inner tail fill -->
+          <path id="cat-tail" class="cat-tail"
+            d="M 62 108 C 42 106, 26 95, 26 78 C 26 67, 34 60, 42 66 C 44 68, 41 74, 38 78 C 34 85, 42 98, 62 103"
+            fill="#182033" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+        </g>
+
+        <!-- Torso Body -->
+        <ellipse cx="78" cy="98" rx="34" ry="29" fill="url(#bodyGrad)" class="cat-torso" />
+
+        <!-- Ears -->
+        <!-- Left Ear -->
+        <polygon points="52,48 34,16 68,34" fill="#1a2236" class="cat-ear ear-left" />
+        <polygon points="51,44 38,22 64,34" fill="url(#pinkEarGrad)" class="ear-inner inner-left" />
+
+        <!-- Right Ear -->
+        <polygon points="98,48 116,16 82,34" fill="#1a2236" class="cat-ear ear-right" />
+        <polygon points="99,44 112,22 86,34" fill="url(#pinkEarGrad)" class="ear-inner inner-right" />
+
+        <!-- Head -->
+        <circle cx="78" cy="62" r="30" fill="url(#headGrad)" class="cat-head" />
+
+        <!-- Glowing Cyan Collar -->
+        <path d="M 52 82 Q 78 94 104 82" fill="none" stroke="#00f0ff" stroke-width="4.5" stroke-linecap="round" filter="url(#cyanGlow)" class="cat-collar" />
+        <path d="M 52 82 Q 78 94 104 82" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" />
+
+        <!-- Collar Glowing Pendant Bell -->
+        <circle cx="78" cy="88" r="7" fill="url(#bellGrad)" filter="url(#cyanGlow)" class="collar-bell" />
+        <circle cx="76.5" cy="86.5" r="2.2" fill="#ffffff" opacity="0.9" />
+
+        <!-- Eyes -->
+        <g id="cat-eyes" class="cat-eyes">
+          <!-- Left Eye -->
+          <g class="eye eye-left">
+            <ellipse cx="64" cy="58" rx="7" ry="8.5" fill="url(#eyeCyanGrad)" filter="url(#cyanGlow)" />
+            <ellipse cx="64" cy="58" rx="5.5" ry="7" fill="#0284c7" />
+            <!-- Specular reflections -->
+            <circle cx="66" cy="55.5" r="2.6" fill="#ffffff" />
+            <circle cx="62.5" cy="60" r="1.3" fill="#ffffff" opacity="0.75" />
+          </g>
+
+          <!-- Right Eye -->
+          <g class="eye eye-right">
+            <ellipse cx="92" cy="58" rx="7" ry="8.5" fill="url(#eyeCyanGrad)" filter="url(#cyanGlow)" />
+            <ellipse cx="92" cy="58" rx="5.5" ry="7" fill="#0284c7" />
+            <!-- Specular reflections -->
+            <circle cx="94" cy="55.5" r="2.6" fill="#ffffff" />
+            <circle cx="90.5" cy="60" r="1.3" fill="#ffffff" opacity="0.75" />
+          </g>
+        </g>
+
+        <!-- Sleeping Eyes for paused state -->
+        <g id="cat-sleeping-eyes" class="cat-sleep-eyes">
+          <path d="M 57 60 Q 64 66 71 60" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" />
+          <path d="M 85 60 Q 92 66 99 60" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" />
+        </g>
+
+        <!-- Blindfold for Shielded state -->
+        <g id="cat-blindfold" class="cat-blindfold">
+          <rect x="46" y="51" width="64" height="15" rx="7.5" fill="#f43f5e" />
+          <text x="78" y="62" fill="#ffffff" font-size="8" font-weight="bold" text-anchor="middle">SHIELDED</text>
+        </g>
+
+        <!-- Cute Pink Nose -->
+        <polygon points="78,66 75,69.5 81,69.5" fill="#f472b6" />
+
+        <!-- Smiling Cat Mouth -->
+        <path d="M 78 69.5 L 78 72.5 M 78 72.5 Q 73 76.5 69 73.5 M 78 72.5 Q 83 76.5 87 73.5"
+          fill="none" stroke="#f472b6" stroke-width="1.8" stroke-linecap="round" id="cat-mouth" class="cat-mouth" />
+
+        <!-- Whiskers (3 crisp white whiskers each side) -->
+        <g class="cat-whiskers">
+          <!-- Left whiskers -->
+          <line x1="56" y1="65" x2="34" y2="63" stroke="#e2e8f0" stroke-width="1.4" stroke-linecap="round" opacity="0.85" />
+          <line x1="56" y1="69" x2="32" y2="70" stroke="#e2e8f0" stroke-width="1.4" stroke-linecap="round" opacity="0.85" />
+          <line x1="56" y1="73" x2="36" y2="77" stroke="#e2e8f0" stroke-width="1.4" stroke-linecap="round" opacity="0.85" />
+          <!-- Right whiskers -->
+          <line x1="100" y1="65" x2="122" y2="63" stroke="#e2e8f0" stroke-width="1.4" stroke-linecap="round" opacity="0.85" />
+          <line x1="100" y1="69" x2="124" y2="70" stroke="#e2e8f0" stroke-width="1.4" stroke-linecap="round" opacity="0.85" />
+          <line x1="100" y1="73" x2="120" y2="77" stroke="#e2e8f0" stroke-width="1.4" stroke-linecap="round" opacity="0.85" />
+        </g>
+
+        <!-- Sitting Resting Paws -->
+        <g id="resting-paws" class="resting-paws">
+          <ellipse cx="66" cy="120" rx="9" ry="6.5" fill="#2d3752" stroke="#1a2236" stroke-width="1" />
+          <ellipse cx="90" cy="120" rx="9" ry="6.5" fill="#2d3752" stroke="#1a2236" stroke-width="1" />
+        </g>
+
+        <!-- Pointing Paw (Activated when pointing out mistake) -->
+        <g id="pointing-paw-group" class="pointing-paw-group">
+          <path id="pointing-arm" d="M 52 95 C 40 85, 28 65, 30 52 C 32 45, 42 48, 40 58 C 38 68, 52 82, 58 92"
+            fill="url(#bodyGrad)" stroke="#38bdf8" stroke-width="1.5" />
+          <!-- Pointing paw tip with cyan indicator -->
+          <circle cx="30" cy="50" r="5.5" fill="#38bdf8" filter="url(#cyanGlow)" />
+          <circle cx="30" cy="50" r="3" fill="#ffffff" />
+          <!-- Pointing finger extension -->
+          <line x1="30" y1="50" x2="18" y2="38" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round" filter="url(#cyanGlow)" />
+          <line x1="30" y1="50" x2="18" y2="38" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" />
+        </g>
+
+        <!-- Zzz floating letters for pause -->
+        <g id="zzz-particles" class="zzz-particles">
+          <text x="106" y="38" fill="#38bdf8" font-size="14" font-weight="bold" class="zzz z1">z</text>
+          <text x="118" y="24" fill="#7dd3fc" font-size="16" font-weight="bold" class="zzz z2">Z</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <script type="module" src="./cat.ts"></script>
+</body>
+</html>

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Companion - Settings & Privacy</title>
+  <link rel="stylesheet" href="./settings.css" />
+</head>
+<body>
+  <div class="settings-app">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-icon">🐱</div>
+        <div>
+          <h2>AI Companion</h2>
+          <span class="version-tag">Groq Vision Edition</span>
+        </div>
+      </div>
+
+      <nav class="nav-tabs">
+        <button class="nav-tab active" data-tab="privacy">
+          <span class="tab-icon">🛡️</span> Privacy Consent
+        </button>
+        <button class="nav-tab" data-tab="groq">
+          <span class="tab-icon">⚡</span> Groq AI Config
+        </button>
+        <button class="nav-tab" data-tab="screen">
+          <span class="tab-icon">🖥️</span> Screen & Capture
+        </button>
+        <button class="nav-tab" data-tab="voice">
+          <span class="tab-icon">🎙️</span> Voice & Speech
+        </button>
+        <button class="nav-tab" data-tab="shield">
+          <span class="tab-icon">🚫</span> Excluded Apps
+        </button>
+        <button class="nav-tab" data-tab="shortcuts">
+          <span class="tab-icon">⌨️</span> Shortcuts & Info
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="status-pill" id="global-status-pill">
+          <span class="dot"></span> <span id="global-status-text">Monitoring Active</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="content-area">
+      <!-- Top Bar -->
+      <header class="content-header">
+        <h1 id="tab-title">Privacy Consent & Data Policy</h1>
+        <div class="header-actions">
+          <button id="save-all-btn" class="btn btn-primary">Save Changes</button>
+        </div>
+      </header>
+
+      <div class="tab-container">
+        <!-- TAB 1: PRIVACY CONSENT -->
+        <section id="tab-privacy" class="tab-pane active">
+          <div class="card privacy-banner">
+            <div class="banner-icon">🔒</div>
+            <div class="banner-text">
+              <h3>Transparent Screen Privacy Disclosure</h3>
+              <p>
+                AI Companion observes your chosen display in real time to provide helpful, actionable coding advice.
+                Screenshots are transmitted securely to <strong>your personal Groq API project</strong> only while monitoring is actively enabled.
+              </p>
+              <ul class="privacy-points">
+                <li>✓ API keys are encrypted with <strong>Windows DPAPI (safeStorage)</strong> and never written to logs or plaintext.</li>
+                <li>✓ Sensitive apps (password managers, browsers, banking titles) trigger <strong>instant capture pausing</strong>.</li>
+                <li>✓ Unchanged screen frames are automatically skipped to minimize API usage.</li>
+                <li>✓ Temporary screenshot cache is stored encrypted and wiped on your configured retention schedule.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card form-card">
+            <h3>Consent Agreement</h3>
+            <div class="switch-row">
+              <div class="switch-desc">
+                <strong>Enable Screen Observation</strong>
+                <p>Allow AI Companion to analyze screens via Groq Vision when monitoring is enabled.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="privacy-consent-toggle" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="card form-card">
+            <h3>Encrypted Local Screenshot History</h3>
+            <p class="field-hint">Temporary image snapshots stored locally for analysis are encrypted via DPAPI and automatically purged.</p>
+            
+            <div class="field-group">
+              <label for="history-retention-select">Auto-Delete Retention Schedule:</label>
+              <select id="history-retention-select" class="form-select">
+                <option value="0">Do not retain (Discard immediately)</option>
+                <option value="60">Keep for 1 hour, then delete</option>
+                <option value="360">Keep for 6 hours, then delete</option>
+                <option value="1440">Keep for 24 hours, then delete</option>
+              </select>
+            </div>
+
+            <div class="history-stats-row">
+              <span class="badge" id="encrypted-count-badge">0 Encrypted Files Cached</span>
+              <button id="purge-history-btn" class="btn btn-secondary">Purge Encrypted History Now</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: GROQ AI CONFIG -->
+        <section id="tab-groq" class="tab-pane">
+          <div class="card form-card">
+            <h3>Groq API Key</h3>
+            <p class="field-hint">
+              Enter your Groq API key. It will be encrypted into Windows DPAPI secure storage.
+            </p>
+
+            <div class="input-with-actions">
+              <input type="password" id="groq-api-key-input" placeholder="gsk_..." class="form-input" />
+              <button id="toggle-key-visibility-btn" class="btn btn-secondary" title="Show / Hide">👁</button>
+              <button id="save-key-btn" class="btn btn-accent">Save Key</button>
+              <button id="delete-key-btn" class="btn btn-danger" title="Remove stored key">Delete</button>
+            </div>
+            
+            <div class="security-note">
+              <span class="lock-icon">🔒</span>
+              <span id="key-status-text">Key Status: No key configured</span>
+            </div>
+
+            <div class="test-connection-section">
+              <button id="test-connection-btn" class="btn btn-secondary">⚡ Test Groq Connection</button>
+              <span id="test-result-indicator" class="test-result-pill hidden"></span>
+            </div>
+          </div>
+
+          <div class="card form-card">
+            <h3>API Endpoint & Vision Model</h3>
+            <div class="field-group">
+              <label for="groq-endpoint-input">Groq API Endpoint:</label>
+              <input type="text" id="groq-endpoint-input" class="form-input" value="https://api.groq.com/openai/v1/chat/completions" />
+              <small class="field-hint">Default: https://api.groq.com/openai/v1/chat/completions</small>
+            </div>
+
+            <div class="field-group">
+              <label for="groq-model-input">Vision Model Identifier:</label>
+              <input type="text" id="groq-model-input" class="form-input" value="qwen/qwen3.8-27b" />
+              <small class="field-hint">Default: qwen/qwen3.8-27b</small>
+            </div>
+          </div>
+
+          <div class="card form-card">
+            <h3>Daily Request Quota & Sensitivity</h3>
+            <div class="field-group">
+              <div class="label-row">
+                <label for="daily-limit-input">Daily Request Limit:</label>
+                <span id="quota-usage-text" class="stat-highlight">0 / 100 today</span>
+              </div>
+              <input type="number" id="daily-limit-input" class="form-input" min="5" max="2000" value="100" />
+              <div class="progress-bar-container">
+                <div id="quota-progress-bar" class="progress-bar-fill" style="width: 0%;"></div>
+              </div>
+              <small class="field-hint">Resets automatically at midnight local time.</small>
+            </div>
+
+            <div class="field-group">
+              <div class="label-row">
+                <label for="min-confidence-slider">Minimum Confidence Threshold:</label>
+                <span id="confidence-val" class="stat-highlight">40%</span>
+              </div>
+              <input type="range" id="min-confidence-slider" min="10" max="95" value="40" class="form-range" />
+              <small class="field-hint">Filters out low-confidence suggestions so the companion only speaks when confident.</small>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 3: SCREEN & CAPTURE -->
+        <section id="tab-screen" class="tab-pane">
+          <div class="card form-card">
+            <h3>Monitor Selection</h3>
+            <div class="field-group">
+              <label for="display-select">Select Monitor to Observe:</label>
+              <select id="display-select" class="form-select">
+                <option value="">Detecting displays...</option>
+              </select>
+              <small class="field-hint">The cat will observe coding activity on this screen.</small>
+            </div>
+          </div>
+
+          <div class="card form-card">
+            <h3>Capture Interval & Change Detection</h3>
+            <div class="field-group">
+              <div class="label-row">
+                <label for="interval-slider">Capture Interval:</label>
+                <span id="interval-val" class="stat-highlight">8 seconds</span>
+              </div>
+              <input type="range" id="interval-slider" min="3" max="60" value="8" class="form-range" />
+              <small class="field-hint">How frequently the companion inspects your screen for new code.</small>
+            </div>
+
+            <div class="field-group">
+              <div class="label-row">
+                <label for="sensitivity-slider">Change Detection Sensitivity:</label>
+                <span id="sensitivity-val" class="stat-highlight">50%</span>
+              </div>
+              <input type="range" id="sensitivity-slider" min="5" max="95" value="50" class="form-range" />
+              <small class="field-hint">
+                Higher sensitivity triggers Groq on subtle edits. Lower sensitivity skips reading, browsing, or idle code to preserve API quota.
+              </small>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: VOICE & SPEECH -->
+        <section id="tab-voice" class="tab-pane">
+          <div class="card form-card">
+            <h3>Windows Text-to-Speech (TTS)</h3>
+            <div class="switch-row">
+              <div class="switch-desc">
+                <strong>Mute Voice Speech</strong>
+                <p>When muted, speech suggestions still appear as text bubbles next to the cat.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="speech-mute-toggle" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="card form-card">
+            <h3>Voice Customization</h3>
+            <div class="field-group">
+              <label for="voice-select">TTS Voice (Installed Windows Voices):</label>
+              <select id="voice-select" class="form-select">
+                <option value="">Default System Voice</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <div class="label-row">
+                <label for="speed-slider">Voice Speed (Rate):</label>
+                <span id="speed-val" class="stat-highlight">1.0x</span>
+              </div>
+              <input type="range" id="speed-slider" min="0.5" max="2.0" step="0.1" value="1.0" class="form-range" />
+            </div>
+
+            <div class="field-group">
+              <div class="label-row">
+                <label for="pitch-slider">Voice Pitch:</label>
+                <span id="pitch-val" class="stat-highlight">1.0x</span>
+              </div>
+              <input type="range" id="pitch-slider" min="0.5" max="1.5" step="0.1" value="1.0" class="form-range" />
+            </div>
+
+            <div class="voice-test-row">
+              <button id="test-voice-btn" class="btn btn-secondary">🔊 Test Voice</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 5: SENSITIVE APPS & SHIELD -->
+        <section id="tab-shield" class="tab-pane">
+          <div class="card form-card">
+            <h3>Live Active Window Shield Monitor</h3>
+            <div class="active-window-preview" id="active-win-container">
+              <span class="preview-dot" id="active-win-dot"></span>
+              <div class="preview-details">
+                <strong id="active-win-proc">Checking active window...</strong>
+                <span id="active-win-title" class="preview-title">-</span>
+              </div>
+              <span id="active-win-badge" class="badge">Safe</span>
+            </div>
+            <small class="field-hint">If an excluded process or keyword is detected in foreground, capture immediately halts.</small>
+          </div>
+
+          <div class="card form-card">
+            <h3>Excluded Application Processes</h3>
+            <p class="field-hint">Processes that immediately pause screen capture whenever active (e.g. password managers, private browsers):</p>
+            
+            <div class="tags-container" id="process-tags"></div>
+
+            <div class="tag-input-row">
+              <input type="text" id="add-process-input" placeholder="e.g. 1password, bitwarden, chrome..." class="form-input" />
+              <button id="add-process-btn" class="btn btn-secondary">Add Process</button>
+            </div>
+          </div>
+
+          <div class="card form-card">
+            <h3>Excluded Window Title Keywords</h3>
+            <p class="field-hint">Keywords in window titles that trigger an instant pause (e.g. Incognito, Banking, Credentials):</p>
+            
+            <div class="tags-container" id="title-tags"></div>
+
+            <div class="tag-input-row">
+              <input type="text" id="add-title-input" placeholder="e.g. incognito, banking, credential..." class="form-input" />
+              <button id="add-title-btn" class="btn btn-secondary">Add Keyword</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 6: SHORTCUTS & INFO -->
+        <section id="tab-shortcuts" class="tab-pane">
+          <div class="card form-card">
+            <h3>Global Keyboard Shortcuts</h3>
+            <table class="shortcuts-table">
+              <thead>
+                <tr>
+                  <th>Shortcut</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>M</kbd></td>
+                  <td>Pause / Resume Screen Monitoring</td>
+                </tr>
+                <tr>
+                  <td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>S</kbd></td>
+                  <td>Open Settings & Privacy Window</td>
+                </tr>
+                <tr>
+                  <td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>D</kbd></td>
+                  <td>Dismiss Current Speech Bubble</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card form-card">
+            <h3>Security & Diagnostics</h3>
+            <div class="diag-item">
+              <span>Windows DPAPI safeStorage:</span>
+              <strong class="text-green">Active & Supported</strong>
+            </div>
+            <div class="diag-item">
+              <span>Model Target:</span>
+              <strong>qwen/qwen3.8-27b</strong>
+            </div>
+            <div class="diag-item">
+              <span>Endpoint:</span>
+              <span class="mono-text">https://api.groq.com/openai/v1/chat/completions</span>
+            </div>
+            <div class="diag-item">
+              <span>Plaintext Storage:</span>
+              <strong class="text-green">0% (Strictly prohibited)</strong>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="./settings.ts"></script>
+</body>
+</html>
