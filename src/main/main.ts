@@ -19,6 +19,9 @@ let settingsStore: SettingsStore;
 let privacyShield: PrivacyShield;
 let screenMonitor: ScreenMonitor;
 
+// Allow text-to-speech voice playback without requiring prior window click gesture
+app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
 function createCatWindow() {
@@ -96,20 +99,68 @@ function openSettingsWindow() {
   });
 }
 
-function setupTray() {
-  // Create a simple SVG or default native image for tray
-  const iconSvg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#6366f1">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-      <circle cx="9" cy="10" r="1.5"/>
-      <circle cx="15" cy="10" r="1.5"/>
-      <path d="M12 15c-1.5 0-2.5-.5-3-1 1-1 2-1 3-1s2 0 3 1c-.5.5-1.5 1-3 1z"/>
-    </svg>`;
-  const iconBuffer = Buffer.from(iconSvg);
-  const trayIcon = nativeImage.createFromBuffer(iconBuffer).resize({ width: 16, height: 16 });
+function createTrayBitmapIcon(): Electron.NativeImage {
+  const w = 16;
+  const h = 16;
+  const buf = Buffer.alloc(w * h * 4);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const idx = (y * w + x) * 4;
+      const dx = x - 7.5;
+      const dy = y - 7.5;
+      const distSq = dx * dx + dy * dy;
+      if (distSq <= 45) {
+        // Indigo / purple companion head
+        buf[idx] = 99;      // R (#6366f1)
+        buf[idx + 1] = 102; // G
+        buf[idx + 2] = 241; // B
+        buf[idx + 3] = 255; // A
 
-  tray = new Tray(trayIcon);
-  tray.setToolTip('AI Companion - Floating Coding Assistant');
+        // Cyan cat eyes
+        if ((y === 6 || y === 7) && (x === 5 || x === 10)) {
+          buf[idx] = 56;      // #38bdf8
+          buf[idx + 1] = 189;
+          buf[idx + 2] = 248;
+        }
+      } else if (distSq <= 56) {
+        buf[idx] = 99;
+        buf[idx + 1] = 102;
+        buf[idx + 2] = 241;
+        buf[idx + 3] = 130;
+      } else {
+        buf[idx + 3] = 0;
+      }
+    }
+  }
+  return nativeImage.createFromBitmap(buf, { width: w, height: h });
+}
+
+function setupTray() {
+  const iconCandidatePaths = [
+    path.join(__dirname, '../../resources/tray.png'),
+    path.join(__dirname, '../../../resources/tray.png'),
+    path.join(process.cwd(), 'resources', 'tray.png'),
+    path.join(process.resourcesPath || '', 'resources', 'tray.png')
+  ];
+
+  let trayIcon: Electron.NativeImage | null = null;
+  for (const p of iconCandidatePaths) {
+    if (fs.existsSync(p)) {
+      trayIcon = nativeImage.createFromPath(p);
+      break;
+    }
+  }
+
+  if (!trayIcon || trayIcon.isEmpty()) {
+    trayIcon = createTrayBitmapIcon();
+  }
+
+  try {
+    tray = new Tray(trayIcon);
+    tray.setToolTip('AI Companion - Floating Coding Assistant');
+  } catch (err) {
+    console.warn('Tray icon setup skipped:', err);
+  }
 
   const updateTrayMenu = () => {
     const isMonitoring = screenMonitor ? screenMonitor.isActive() : false;
@@ -155,7 +206,7 @@ function setupTray() {
   };
 
   updateTrayMenu();
-  tray.on('double-click', () => openSettingsWindow());
+  tray?.on('double-click', () => openSettingsWindow());
 }
 
 function registerShortcuts() {

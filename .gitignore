@@ -74,6 +74,10 @@ web_modules/
 
 # dotenv environment variable files
 .env
+.env.*
+*.env
+*.enc
+quota_stats.json
 .env.development.local
 .env.test.local
 .env.production.local

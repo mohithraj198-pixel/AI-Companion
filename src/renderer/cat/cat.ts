@@ -77,6 +77,9 @@ function speakText(text: string) {
   };
 
   currentUtterance = utterance;
+  if (window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
+  }
   window.speechSynthesis.speak(utterance);
 }
 
@@ -94,17 +97,17 @@ function setCatState(state: CatAnimationState, tooltipMsg?: string) {
   if (state === 'idle') {
     pointingBeam.classList.add('hidden');
     mistakePill.classList.add('hidden');
-    bubbleTitle.innerText = 'Companion Status';
-    bubbleContent.innerText = 'Observing screen changes...';
-    bubbleContent.classList.remove('has-mistake');
-    speechBubble.classList.add('hidden');
+    // If a suggestion is currently being displayed, do NOT hide the speech bubble
+    if (!bubbleTimeout) {
+      speechBubble.classList.add('hidden');
+    }
   } else if (state === 'thinking') {
     pointingBeam.classList.add('hidden');
-    mistakePill.classList.add('hidden');
-    bubbleTitle.innerText = 'Companion Status';
-    bubbleContent.innerText = 'Analyzing screen for code mistakes...';
-    bubbleContent.classList.remove('has-mistake');
-    speechBubble.classList.remove('hidden');
+    // Keep speech bubble hidden during routine background thinking cycles
+    // The cat's subtle aura and eyes indicate background processing
+    if (!bubbleTimeout) {
+      speechBubble.classList.add('hidden');
+    }
   } else if (state === 'paused') {
     pointingBeam.classList.add('hidden');
     mistakePill.classList.add('hidden');

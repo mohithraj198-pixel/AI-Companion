@@ -252,7 +252,7 @@ export class ScreenMonitor {
 
     // 9. Handle Suggestion
     if (suggestion && suggestion.text && suggestion.text.trim().length > 0) {
-      const minConf = this.settings.minConfidence !== undefined ? this.settings.minConfidence : 0.4;
+      const minConf = Math.min(this.settings.minConfidence !== undefined ? this.settings.minConfidence : 0.35, 0.4);
       if (suggestion.confidence >= minConf) {
         if (this.onStateChange) {
           this.onStateChange(suggestion.hasMistake ? 'pointing' : 'speaking');

@@ -69,83 +69,96 @@ export class PrivacyShield {
     this.onShieldStateChange = callback;
   }
 
-  public async checkActiveWindow(): Promise<ActiveWindowInfo> {
-    return new Promise<ActiveWindowInfo>((resolve) => {
-      const command = this.exePath
-        ? `"${this.exePath}"`
-        : (this.psPath ? `powershell -ExecutionPolicy Bypass -NoProfile -File "${this.psPath}"` : '');
-
-      if (!command) {
-        resolve(this.currentActiveWindow);
-        return;
-      }
-
-      exec(command, { windowsHide: true, timeout: 2000 }, (error, stdout) => {
+  private runCommand(cmd: string): Promise<string | null> {
+    return new Promise((resolve) => {
+      exec(cmd, { windowsHide: true, timeout: 3000 }, (error, stdout) => {
         if (error || !stdout) {
-          resolve(this.currentActiveWindow);
-          return;
-        }
-
-        const trimmed = stdout.trim();
-        const sepIndex = trimmed.indexOf('|');
-        let procName = 'Unknown';
-        let winTitle = '';
-
-        if (sepIndex !== -1) {
-          procName = trimmed.slice(0, sepIndex).trim();
-          winTitle = trimmed.slice(sepIndex + 1).trim();
+          resolve(null);
         } else {
-          procName = trimmed;
+          resolve(stdout.trim());
         }
-
-        const lowerProc = procName.toLowerCase();
-        const lowerTitle = winTitle.toLowerCase();
-
-        let isShielded = false;
-        let shieldReason = '';
-
-        if (lowerProc === 'none' || lowerProc === 'idle') {
-          procName = 'Desktop / None';
-        } else {
-          // Check process exclusion
-          if (this.excludedProcesses.has(lowerProc) || this.excludedProcesses.has(lowerProc + '.exe')) {
-            isShielded = true;
-            shieldReason = `Excluded process: ${procName}`;
-          }
-
-          // Check title keyword exclusion
-          if (!isShielded) {
-            for (const kw of this.excludedKeywords) {
-              if (kw && lowerTitle.includes(kw)) {
-                isShielded = true;
-                shieldReason = `Sensitive window title: "${kw}"`;
-                break;
-              }
-            }
-          }
-        }
-
-        const updated: ActiveWindowInfo = {
-          processName: procName,
-          windowTitle: winTitle,
-          isShielded,
-          shieldReason
-        };
-
-        const changed = 
-          this.currentActiveWindow.isShielded !== updated.isShielded ||
-          this.currentActiveWindow.processName !== updated.processName ||
-          this.currentActiveWindow.windowTitle !== updated.windowTitle;
-
-        this.currentActiveWindow = updated;
-
-        if (changed && this.onShieldStateChange) {
-          this.onShieldStateChange(updated.isShielded, updated);
-        }
-
-        resolve(updated);
       });
     });
+  }
+
+  public async checkActiveWindow(): Promise<ActiveWindowInfo> {
+    let output: string | null = null;
+
+    if (this.exePath) {
+      output = await this.runCommand(`"${this.exePath}"`);
+      if (!output) {
+        // Exe failed (e.g. blocked by Windows AppLocker / WDAC Application Control)
+        // Permanently fall back to PowerShell
+        this.exePath = undefined;
+      }
+    }
+
+    if (!output && this.psPath) {
+      output = await this.runCommand(`powershell -ExecutionPolicy Bypass -NoProfile -File "${this.psPath}"`);
+    }
+
+    if (!output) {
+      return this.currentActiveWindow;
+    }
+
+    const trimmed = output.trim();
+    const sepIndex = trimmed.indexOf('|');
+    let procName = 'Unknown';
+    let winTitle = '';
+
+    if (sepIndex !== -1) {
+      procName = trimmed.slice(0, sepIndex).trim();
+      winTitle = trimmed.slice(sepIndex + 1).trim();
+    } else {
+      procName = trimmed;
+    }
+
+    const lowerProc = procName.toLowerCase();
+    const lowerTitle = winTitle.toLowerCase();
+
+    let isShielded = false;
+    let shieldReason = '';
+
+    if (lowerProc === 'none' || lowerProc === 'idle') {
+      procName = 'Desktop / None';
+    } else {
+      // Check process exclusion
+      if (this.excludedProcesses.has(lowerProc) || this.excludedProcesses.has(lowerProc + '.exe')) {
+        isShielded = true;
+        shieldReason = `Excluded process: ${procName}`;
+      }
+
+      // Check title keyword exclusion
+      if (!isShielded) {
+        for (const kw of this.excludedKeywords) {
+          if (kw && lowerTitle.includes(kw)) {
+            isShielded = true;
+            shieldReason = `Sensitive window title: "${kw}"`;
+            break;
+          }
+        }
+      }
+    }
+
+    const updated: ActiveWindowInfo = {
+      processName: procName,
+      windowTitle: winTitle,
+      isShielded,
+      shieldReason
+    };
+
+    const changed = 
+      this.currentActiveWindow.isShielded !== updated.isShielded ||
+      this.currentActiveWindow.processName !== updated.processName ||
+      this.currentActiveWindow.windowTitle !== updated.windowTitle;
+
+    this.currentActiveWindow = updated;
+
+    if (changed && this.onShieldStateChange) {
+      this.onShieldStateChange(updated.isShielded, updated);
+    }
+
+    return updated;
   }
 
   public getLastActiveWindow(): ActiveWindowInfo {

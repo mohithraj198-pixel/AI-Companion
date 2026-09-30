@@ -27,21 +27,19 @@ export class GroqClient {
     }
 
     const promptText = 
-      'You are a desktop AI coding companion observing the user\'s screen while they write code. ' +
-      'Your job is to provide helpful, proactive coding assistance, catching real mistakes, bugs, and guiding them as they code. ' +
-      'Check for: ' +
-      '1. Real bugs, logic errors, undefined variables/functions, or visible compiler/terminal errors. ' +
-      '2. Misspelled tags, API names, function calls, CSS properties, or syntax mistakes (unclosed brackets, quotes, unclosed tags). ' +
-      '3. Helpful next-step coding tips or completions for the code they are currently writing. ' +
-      'CRITICAL RULES: ' +
-      '- DO NOT report missing semicolons (;). Never complain about missing semicolons in JavaScript, TypeScript, or CSS. ' +
-      '- DO NOT interrupt for incomplete words or lines currently in the middle of being typed. ' +
-      '- DO NOT give long essays, tutorials, or full block rewrites. ' +
-      '- Keep responses extremely concise (1-2 sentences max). ' +
-      '- Format: "Line [N]: [issue or suggestion]. Fix/Tip: [brief guidance]" (e.g. "Line 15: `fetchData` is called without `await`. Fix: Add `await fetchData()`"). ' +
-      '- If the code looks fine or user is normally typing, return empty string in "text". ' +
-      'Return ONLY a raw JSON object: ' +
-      '{"text":"Line [N]: [suggestion or fix]","urgency":"low|medium|high","confidence":0..1}';
+      'You are a desktop AI coding companion observing the user\'s screen while they code.\n' +
+      'Your job is to read the code/terminal visible on screen and provide helpful, proactive assistance.\n' +
+      '1. If there is a bug, mistake, error, or broken syntax: point out the line and the exact fix.\n' +
+      '2. If the code is working normally: provide a helpful observation, next step, optimization tip, or brief explanation of what the current code does.\n' +
+      '3. Only return empty "text" if there is no code, terminal, or programming editor visible on screen.\n' +
+      'CRITICAL RULES:\n' +
+      '- DO NOT output <think> tags or reasoning thoughts. Return ONLY raw JSON.\n' +
+      '- DO NOT complain about missing semicolons in JS/TS.\n' +
+      '- DO NOT give long essays. Keep responses concise (1-2 sentences max, 15-30 words).\n' +
+      '- Format for mistakes: "Line [N]: [issue]. Fix: [brief guidance]"\n' +
+      '- Format for tips: "Observing [component/function]: [insight or tip]"\n' +
+      'Return ONLY a raw JSON object:\n' +
+      '{"text":"[1-2 sentence suggestion or tip]","urgency":"low|medium|high","confidence":0.85}';
 
     const payload = {
       model: model || 'qwen/qwen3.8-27b',
@@ -64,7 +62,7 @@ export class GroqClient {
       ],
       response_format: { type: 'json_object' },
       temperature: 0.1,
-      max_tokens: 250
+      max_tokens: 1024
     };
 
     let response: Response;
@@ -122,6 +120,10 @@ export class GroqClient {
       contentString = JSON.stringify(data);
     }
 
+    // Strip reasoning / thinking tags if emitted by model
+    contentString = contentString.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    contentString = contentString.replace(/<thought>[\s\S]*?<\/thought>/gi, '').trim();
+
     // Clean JSON markdown blocks if any
     let cleanedJson = contentString.trim();
     if (cleanedJson.startsWith('```json')) {
@@ -133,6 +135,13 @@ export class GroqClient {
       cleanedJson = cleanedJson.slice(0, -3);
     }
     cleanedJson = cleanedJson.trim();
+
+    // If surrounded by extra text or tags, extract substring between first { and last }
+    const firstBrace = cleanedJson.indexOf('{');
+    const lastBrace = cleanedJson.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      cleanedJson = cleanedJson.substring(firstBrace, lastBrace + 1);
+    }
 
     try {
       const parsed = JSON.parse(cleanedJson);
@@ -207,11 +216,11 @@ export class GroqClient {
       messages: [
         {
           role: 'user',
-          content: 'Reply with JSON: {"status":"ok","message":"connection successful"}'
+          content: 'Return ONLY the JSON: {"status":"ok","message":"connection successful"}. Do not output any think tags or reasoning.'
         }
       ],
       response_format: { type: 'json_object' },
-      max_tokens: 50
+      max_tokens: 350
     };
 
     try {
